@@ -39,38 +39,7 @@ void combine(stateNode* first, char type, stateNode* last) {
     }
 }
 
-// Thompson算法
-class REToNFA{
-public:
-    REToNFA(std::string s) {
-        lex = new lexer(s);
-        start = nullptr;
-        end = nullptr;
-    }
-
-    void thompson();
-    void printNFA();
-private:
-    lexer* lex;
-    stateNode* start;       // 指向NFA头部
-    stateNode* end;         // 指向NFA尾部
-    // 存储所有创建的节点
-    std::vector<stateNode*> v;
-
-    void printNFA_core(stateNode* prev, char ch, stateNode* next);
-};
-
-void REToNFA::printNFA() {
-    for (auto node : v) {
-        if (node->next1 != nullptr)
-            printNFA_core(node, node->edge1, node->next1);
-        if (node->next2 != nullptr)
-            printNFA_core(node, node->edge2, node->next2);
-    }
-}
-
-void REToNFA::printNFA_core(stateNode* prev, char ch, stateNode* next) {
-       
+void print_relationships(stateNode* prev, char ch, stateNode* next) {
     if (ch == EMPTY)
         return;
 
@@ -81,8 +50,41 @@ void REToNFA::printNFA_core(stateNode* prev, char ch, stateNode* next) {
     else {
         std::cout << ch << " --> " << next->get_id() << std::endl;
     }
+}
 
-    return;
+// Thompson算法
+class REToNFA{
+public:
+    REToNFA(std::string s) {
+        lex = new lexer(s);
+        start = nullptr;
+        end = nullptr;
+    }
+
+    stateNode* get_start() {
+        return start;
+    }
+
+    stateNode* get_end() {
+        return end;
+    }
+    void thompson();
+    void printNFA();
+private:
+    lexer* lex;
+    stateNode* start;       // 指向NFA头部
+    stateNode* end;         // 指向NFA尾部
+    // 存储所有创建的节点
+    std::vector<stateNode*> v;
+};
+
+void REToNFA::printNFA() {
+    for (auto node : v) {
+        if (node->next1 != nullptr)
+            print_relationships(node, node->edge1, node->next1);
+        if (node->next2 != nullptr)
+            print_relationships(node, node->edge2, node->next2);
+    }
 }
 
 /* thompson算法，RE转NFA
