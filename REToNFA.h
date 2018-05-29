@@ -2,53 +2,45 @@
 #include <iostream>
 #include <stack>
 #include <vector>
+#include <map>
+#include <set>
 #include "lexer.h"
 
-#define EPSILON 1       // 对应空串ε
-#define EMPTY   2       // 无出边
+#define EPSILON 0   
 
 // NFA结点
 // 每个节点最多两个出边
 class stateNode {
 public:
+    stateNode() :id(statnum++) {}
+    std::map<char, std::set<stateNode*>> m;
+
     static int statnum;
-    stateNode* next1, *next2;
-    char edge1, edge2;
-    stateNode() :id(statnum++), next1(nullptr), next2(nullptr),
-    edge1(EMPTY), edge2(EMPTY){}
 
     int get_id() {
         return id;
     }
-
 private:
     int id;
 };
 
 int stateNode::statnum = 0;
 
-// 连接两个节点
-void combine(stateNode* first, char type, stateNode* last) {
-    if (first->next1 == nullptr) {
-        first->next1 = last;
-        first->edge1 = type;
-    }
-    else {
-        first->next2 = last;
-        first->edge2 = type;
-    }
+void combine(stateNode* pre, char c, stateNode* next) {
+    (pre->m)[c].insert(next);
 }
 
-void print_relationships(stateNode* prev, char ch, stateNode* next) {
-    if (ch == EMPTY)
-        return;
 
-    std::cout << prev->get_id() << " --> ";
-    if (ch == EPSILON) {
-        std::cout << "ε" << " --> " << next->get_id() << std::endl;
-    }
-    else {
-        std::cout << ch << " --> " << next->get_id() << std::endl;
+void print_relationships(stateNode* node) {
+    for (auto& p: node->m) {
+        for (auto& s : p.second) {
+            std::cout << node->get_id() << " --> ";
+            if (p.first == EPSILON)
+                std::cout << "ε";
+            else
+                std::cout << p.first;
+            std::cout << "-->" << s->get_id() << std::endl;
+        }
     }
 }
 
@@ -79,12 +71,8 @@ private:
 };
 
 void REToNFA::printNFA() {
-    for (auto node : v) {
-        if (node->next1 != nullptr)
-            print_relationships(node, node->edge1, node->next1);
-        if (node->next2 != nullptr)
-            print_relationships(node, node->edge2, node->next2);
-    }
+    for (auto node : v)
+        print_relationships(node);
 }
 
 /* thompson算法，RE转NFA
@@ -110,7 +98,7 @@ void REToNFA::thompson() {
 
     st_start.push(start);
     st_end.push(end);
-    st_char.push('@');
+    st_char.push('$');
     int len = lex->get_input_length();
 
     while (len--) {
@@ -138,12 +126,15 @@ void REToNFA::thompson() {
                 stateNode* next = st_start.top();
                 st_start.pop();
                 stateNode* prev = st_start.top();
-                combine(prev, ch, next);
+                if (ch != '#')
+                    combine(prev, ch, next);
                 st_char.pop();
                 ch = st_char.top();
             }
 
             st_char.pop();
+            // ()一个完整语句，用#分隔
+            st_char.push('#');
             st_start.push(st_end.top());
             st_end.pop();
             break;
@@ -158,7 +149,8 @@ void REToNFA::thompson() {
                 stateNode* next = st_start.top();
                 st_start.pop();
                 stateNode* prev = st_start.top();
-                combine(prev, ch, next);
+                if (ch != '#')
+                    combine(prev, ch, next);
                 st_char.pop();
                 ch = st_char.top();
             }
@@ -183,22 +175,16 @@ void REToNFA::thompson() {
         }
     }
 
-    if (st_start.top()->next1 == nullptr) {
-        st_start.top()->next1 = end;
-        st_start.top()->edge1 = EPSILON;
-    }
-    else {
-        st_start.top()->next2 = end;
-        st_start.top()->edge2 = EPSILON;
-    }
+    combine(st_start.top(), EPSILON, end);
 
     char ch = st_char.top();
     // 连接剩余的节点
-    while (ch != '@') {
+    while (ch != '$') {
         stateNode* next = st_start.top();
         st_start.pop();
         stateNode* prev = st_start.top();
-        combine(prev, ch, next);
+        if (ch != '#')
+            combine(prev, ch, next);
         st_char.pop();
         ch = st_char.top();
     }
