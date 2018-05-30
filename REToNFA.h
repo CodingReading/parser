@@ -39,7 +39,7 @@ void print_relationships(stateNode* node) {
                 std::cout << "¦Å";
             else
                 std::cout << p.first;
-            std::cout << "-->" << s->get_id() << std::endl;
+            std::cout << " --> " << s->get_id() << std::endl;
         }
     }
 }
@@ -71,8 +71,10 @@ private:
 };
 
 void REToNFA::printNFA() {
+    std::cout << "------------------RE to NFA------------------" << std::endl;
     for (auto node : v)
         print_relationships(node);
+    std::cout << std::endl;
 }
 
 /* thompsonËã·¨£¬RE×ªNFA
