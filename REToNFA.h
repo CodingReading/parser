@@ -30,7 +30,6 @@ void combine(stateNode* pre, char c, stateNode* next) {
     (pre->m)[c].insert(next);
 }
 
-
 void print_relationships(stateNode* node) {
     for (auto& p: node->m) {
         for (auto& s : p.second) {

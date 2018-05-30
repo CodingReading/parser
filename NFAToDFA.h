@@ -95,7 +95,7 @@ void NFAToDFA::subset_construction() {
             stateNode* cur_node = Q[s].first;
             // 如果这个子集存在,不用创造新节点
             if (Q.find(eps_set) != Q.end()) {
-                cur_node->m[c].insert(Q[eps_set].first);
+                combine(cur_node, c, Q[eps_set].first);
             }
             else {
                 // 保存节点
