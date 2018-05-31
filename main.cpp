@@ -12,6 +12,9 @@ int main() {
     NFAToDFA nfa_to_dfa = NFAToDFA(re_to_nfa);
     nfa_to_dfa.subset_construction();
     nfa_to_dfa.printDFA();
+
+    nfa_to_dfa.hopcroft();
+    nfa_to_dfa.printf_simplifiedDFA();
     system("pause");
     return 0;
 }
