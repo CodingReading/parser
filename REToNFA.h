@@ -1,72 +1,35 @@
 #pragma once
-#include <iostream>
 #include <stack>
 #include <vector>
-#include <map>
 #include <set>
 #include "lexer.h"
+#include "node.h"
 
-#define EPSILON 0   
-
-// NFA结点
-// 每个节点最多两个出边
-class stateNode {
-public:
-    stateNode() :id(statnum++) {}
-    std::map<char, std::set<stateNode*>> m;
-
-    static int statnum;
-
-    int get_id() {
-        return id;
-    }
-private:
-    int id;
-};
-
-int stateNode::statnum = 0;
-
-void combine(stateNode* pre, char c, stateNode* next) {
-    (pre->m)[c].insert(next);
-}
-
-void print_relationships(stateNode* node) {
-    for (auto& p: node->m) {
-        for (auto& s : p.second) {
-            std::cout << node->get_id() << " --> ";
-            if (p.first == EPSILON)
-                std::cout << "ε";
-            else
-                std::cout << p.first;
-            std::cout << " --> " << s->get_id() << std::endl;
-        }
-    }
-}
 
 // Thompson算法
 class REToNFA{
 public:
     REToNFA(std::string s) {
-        lex = new lexer(s);
+        lex = new Lexer(s);
         start = nullptr;
         end = nullptr;
     }
 
-    stateNode* get_start() {
+    StateNode* get_start() {
         return start;
     }
 
-    stateNode* get_end() {
+    StateNode* get_end() {
         return end;
     }
     void thompson();
     void printNFA();
 private:
-    lexer* lex;
-    stateNode* start;       // 指向NFA头部
-    stateNode* end;         // 指向NFA尾部
+    Lexer* lex;
+    StateNode* start;       // 指向NFA头部
+    StateNode* end;         // 指向NFA尾部
     // 存储所有创建的节点
-    std::vector<stateNode*> v;
+    std::vector<StateNode*> v;
 };
 
 void REToNFA::printNFA() {
@@ -87,12 +50,12 @@ void REToNFA::printNFA() {
    */
 
 void REToNFA::thompson() {
-    std::stack<stateNode*> st_start;
-    std::stack<stateNode*> st_end;
+    std::stack<StateNode*> st_start;
+    std::stack<StateNode*> st_end;
     std::stack<char> st_char;
 
-    start = new stateNode();
-    end = new stateNode();
+    start = new StateNode();
+    end = new StateNode();
 
     v.push_back(start);
     v.push_back(end);
@@ -103,13 +66,13 @@ void REToNFA::thompson() {
     int len = lex->get_input_length();
 
     while (len--) {
-        char ch = lex->get_current_char();
+        char ch = lex->get_next_char();
         
         switch (ch)
         {
         case '(':
         {
-            stateNode* n = new stateNode();
+            StateNode* n = new StateNode();
             v.push_back(n);
             st_end.push(n);
             st_char.push(ch);
@@ -117,16 +80,16 @@ void REToNFA::thompson() {
         }
         case ')':
         {
-            stateNode* st = st_start.top();
-            stateNode* ed = st_end.top();
+            StateNode* st = st_start.top();
+            StateNode* ed = st_end.top();
 
             combine(st, EPSILON, ed);
             ch = st_char.top();
 
             while (ch != '(') {
-                stateNode* next = st_start.top();
+                StateNode* next = st_start.top();
                 st_start.pop();
-                stateNode* prev = st_start.top();
+                StateNode* prev = st_start.top();
                 if (ch != '#')
                     combine(prev, ch, next);
                 st_char.pop();
@@ -142,14 +105,14 @@ void REToNFA::thompson() {
         }
         case '|':
         {
-            stateNode* st = st_start.top();
-            stateNode* ed = st_end.top();
+            StateNode* st = st_start.top();
+            StateNode* ed = st_end.top();
             combine(st, EPSILON, ed);
             ch = st_char.top();
             while (ch != '(' && ch != '@') {
-                stateNode* next = st_start.top();
+                StateNode* next = st_start.top();
                 st_start.pop();
-                stateNode* prev = st_start.top();
+                StateNode* prev = st_start.top();
                 if (ch != '#')
                     combine(prev, ch, next);
                 st_char.pop();
@@ -159,16 +122,16 @@ void REToNFA::thompson() {
         }
         case '*':
         {
-            stateNode* next = st_start.top();
+            StateNode* next = st_start.top();
             st_start.pop();
-            stateNode* prev = st_start.top();
+            StateNode* prev = st_start.top();
             combine(prev, EPSILON, next);
             combine(next, EPSILON, prev);
             st_start.push(next);
             break;
         }
         default:
-            stateNode* n = new stateNode();
+            StateNode* n = new StateNode();
             v.push_back(n);
             st_start.push(n);
             st_char.push(ch);
@@ -181,9 +144,9 @@ void REToNFA::thompson() {
     char ch = st_char.top();
     // 连接剩余的节点
     while (ch != '$') {
-        stateNode* next = st_start.top();
+        StateNode* next = st_start.top();
         st_start.pop();
-        stateNode* prev = st_start.top();
+        StateNode* prev = st_start.top();
         if (ch != '#')
             combine(prev, ch, next);
         st_char.pop();

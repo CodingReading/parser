@@ -1,5 +1,6 @@
 #include "REToNFA.h"
 #include "NFAToDFA.h"
+#include "parseToken.h"
 
 int main() {
     std::string s;
@@ -15,6 +16,13 @@ int main() {
 
     nfa_to_dfa.hopcroft();
     nfa_to_dfa.printf_simplifiedDFA();
+
+    std::cout << "ÊäÈë´ý½âÎöµÄ×Ö·û´®: ";
+    std::cin >> s;
+    Lexer lex = Lexer(s);
+    ParseToken parse = ParseToken(&nfa_to_dfa);
+    std::cout << parse.nextToken(&lex) << std::endl;
+
     system("pause");
     return 0;
 }
