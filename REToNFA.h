@@ -65,9 +65,20 @@ void REToNFA::thompson() {
     st_char.push('$');
     int len = lex->get_input_length();
 
+    bool is_escape_char = false;
+
     while (len--) {
         char ch = lex->get_next_char();
-        
+        if (ch == '\\') {
+            is_escape_char = true;
+            continue;
+        }
+
+        if (is_escape_char) {
+            is_escape_char = false;
+            goto escape_char;
+        }
+
         switch (ch)
         {
         case '(':
@@ -90,15 +101,15 @@ void REToNFA::thompson() {
                 StateNode* next = st_start.top();
                 st_start.pop();
                 StateNode* prev = st_start.top();
-                if (ch != '#')
+                if (ch != '@')
                     combine(prev, ch, next);
                 st_char.pop();
                 ch = st_char.top();
             }
 
             st_char.pop();
-            // ()一个完整语句，用#分隔
-            st_char.push('#');
+            // ()一个完整语句，用@分隔
+            st_char.push('@');
             st_start.push(st_end.top());
             st_end.pop();
             break;
@@ -109,11 +120,11 @@ void REToNFA::thompson() {
             StateNode* ed = st_end.top();
             combine(st, EPSILON, ed);
             ch = st_char.top();
-            while (ch != '(' && ch != '@') {
+            while (ch != '(' && ch != '$') {
                 StateNode* next = st_start.top();
                 st_start.pop();
                 StateNode* prev = st_start.top();
-                if (ch != '#')
+                if (ch != '@')
                     combine(prev, ch, next);
                 st_char.pop();
                 ch = st_char.top();
@@ -131,6 +142,7 @@ void REToNFA::thompson() {
             break;
         }
         default:
+        escape_char:
             StateNode* n = new StateNode();
             v.push_back(n);
             st_start.push(n);
@@ -147,7 +159,7 @@ void REToNFA::thompson() {
         StateNode* next = st_start.top();
         st_start.pop();
         StateNode* prev = st_start.top();
-        if (ch != '#')
+        if (ch != '@')
             combine(prev, ch, next);
         st_char.pop();
         ch = st_char.top();

@@ -10,7 +10,7 @@ public:
     ParseToken(NFAToDFA* d) :nodes(d->simplified_nodes), dfa_end_nodes(d->simplified_end_nodes){
         generate_simplifiedDFA_start_node();
     }
-    std::string nextToken(Lexer* lex);
+    int get_token_length(std::string s);
 private:
     StateNode* start;
     std::vector<StateNode*> nodes;
@@ -19,12 +19,13 @@ private:
     void generate_simplifiedDFA_start_node();
 };
 
-std::string ParseToken::nextToken(Lexer* lex) {
+int ParseToken::get_token_length(std::string s) {
     std::stack<StateNode*> st;
     StateNode* state = start;
     int length = 0;
+    int cur = 0;
     while (state != nullptr) {
-        char c = lex->get_next_char();
+        char c = s[cur++];
         if (dfa_end_nodes.find(state) != dfa_end_nodes.end()) {
             while (st.size())
                 st.pop();
@@ -49,7 +50,7 @@ std::string ParseToken::nextToken(Lexer* lex) {
         --length;
     }
 
-    return lex->get_substr(0, length);
+    return length;
 }
 
 void ParseToken::generate_simplifiedDFA_start_node() {

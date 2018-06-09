@@ -34,7 +34,7 @@ void delta(std::set<StateNode*>& s, char c, std::set<StateNode*>& v) {
 class NFAToDFA {
 public:
     NFAToDFA() :nfa_start(nullptr), nfa_end(nullptr) , dfa_start(nullptr){}
-    NFAToDFA(REToNFA& r) :nfa_start(r.get_start()), nfa_end(r.get_end()), dfa_start(nullptr) {}
+    NFAToDFA(REToNFA* r) :nfa_start(r->get_start()), nfa_end(r->get_end()), dfa_start(nullptr) {}
     void subset_construction();
     void printDFA();
     void printf_simplifiedDFA();
